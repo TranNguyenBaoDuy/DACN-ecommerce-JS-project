@@ -74,5 +74,42 @@ const singleProduct = async (req,res) =>{
         res.json({success:false, message:error.message})
     }
 }
+const updateProduct = async (req, res) => {
+    try {
+    const { id } = req.body;
+    const { name, description, price, category, subCategory, sizes, bestseller } = req.body;
 
-export {listProduct,addProduct,removeProduct,singleProduct}
+    // Tạo object dữ liệu cập nhật
+    const updatedData = {
+      name,
+      description,
+      price,
+      category,
+      subCategory,
+      sizes: sizes ? JSON.parse(sizes) : undefined,
+      bestseller,
+    };
+
+    // Xóa các field undefined (nếu client không gửi)
+    Object.keys(updatedData).forEach((key) => {
+      if (updatedData[key] === undefined) delete updatedData[key];
+    });
+
+    // Cập nhật trong MongoDB
+    const updatedProduct = await productModel.findByIdAndUpdate(id, updatedData, { new: true });
+
+    if (!updatedProduct)
+      return res.status(404).json({ success: false, message: "Không tìm thấy sản phẩm" });
+
+    res.json({
+      success: true,
+      message: "Cập nhật thông tin sản phẩm thành công",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export {listProduct,addProduct,removeProduct,singleProduct, updateProduct}

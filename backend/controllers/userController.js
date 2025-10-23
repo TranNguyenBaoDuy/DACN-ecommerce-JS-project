@@ -70,18 +70,26 @@ const registerUser = async (req,res)=>{
 }
 
 //Route for admin login
-const adminLogin = async(req,res)=>{
-    try {
-        const {email,password} = req.body
-        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-            const token = jwt.sign(email+password,process.env.JWT_SECRET);
-            res.json({success:true,token})
-        } else{
-            res.json({success:false,message:"Không phải tài khoản admin"})
-        }
-    } catch (error) {
-        console.log(error)
-        res.json({success:false,  message:error.message})
+const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Kiểm tra thông tin admin
+    if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+      // Tạo token chứa payload
+      const token = jwt.sign(
+        { role: 'admin', email },
+        process.env.JWT_SECRET,
+        { expiresIn: '3d' } // token có hạn 3 ngày
+      );
+
+      return res.json({ success: true, token });
+    } else {
+      return res.json({ success: false, message: 'Không phải tài khoản admin' });
     }
-}
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
 export {loginUser,registerUser, adminLogin}

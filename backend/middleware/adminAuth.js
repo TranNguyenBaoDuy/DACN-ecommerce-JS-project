@@ -1,19 +1,29 @@
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
 
-const adminAuth = async (req,res,next) =>{
-    try {
-        const {token} = req.headers
-        if (!token) {
-            return res.json({success:false,message:"Không được phép đăng nhập lại"})
-        }
-        const token_decode = jwt.verify(token,process.env.JWT_SECRET);
-        if (token_decode !== process.env.ADMIN_EMAIL + process.env.ADMIN_PASSWORD) {
-            return res.json({success:false,message:"Không được phép đăng nhập lại"})
-        }
-        next()
-    } catch (error) {
-        console.log(error)
-        res.json({success:false,  message:error.message})
+const adminAuth = (req, res, next) => {
+  try {
+    const token = req.headers.token;
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'Thiếu token xác thực' });
     }
-}
-export default adminAuth
+
+    // Giải mã token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Kiểm tra quyền admin
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Không có quyền truy cập' });
+    }
+
+    // Lưu thông tin admin vào request (nếu cần dùng sau)
+    req.admin = decoded;
+
+    next();
+  } catch (error) {
+    console.error(error);
+    return res.status(403).json({ success: false, message: 'Token không hợp lệ hoặc đã hết hạn' });
+  }
+};
+
+export default adminAuth;
